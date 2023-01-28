@@ -7,40 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Clicker {
-  clicks Int
-  userId Int  @unique
-  user   User @relation(fields: [userId], references: [id])
-}
-
 model User {
-  id            Int       @id @unique @default(autoincrement())
-  salt          String    @unique
-  hash          String    @unique
-  session       String    @unique
-  username      String    @unique
-  clicker       Clicker?
-  messages      Message[] @relation("messages")
-  favoriteChats Chat[]    @relation("favoriteChats")
-  likes         Message[] @relation("likes")
-}
-
-model Chat {
-  id          Int       @id @unique @default(autoincrement())
-  name        String    @unique
-  messages    Message[]
-  favoritedBy User[]    @relation("favoriteChats")
-}
-
-model Message {
-  id        Int      @id @default(autoincrement())
-  authorId  Int?
-  chatId    Int?
-  content   String
-  timestamp DateTime @default(now())
-  own       Boolean?
-  liked     Boolean?
-  chat      Chat?    @relation(fields: [chatId], references: [id])
-  author    User?    @relation("messages", fields: [authorId], references: [id])
-  likedBy   User[]   @relation("likes")
+  id       Int    @id @unique @default(autoincrement())
+  salt     String @unique
+  hash     String @unique
+  session  String @unique
+  username String @unique
 }

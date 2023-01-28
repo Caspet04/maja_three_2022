@@ -3,14 +3,14 @@ import { database } from "$lib/database";
 
 // handle runs for every request to the server
 export const handle: Handle = async ({ event, resolve }) => {
-  const session = event.cookies.get("session");
+    const session = event.cookies.get("session");
 
-  if (session) {
-    let result = await database.user.findUnique({ where: { session } });
-    if (result?.session) {
-      event.locals.session = result.session;
+    if (session) {
+        let result = await database.user.findUnique({ where: { session } });
+        if (result?.session) {
+            event.locals.session = result.session;
+        }
     }
-  }
 
-  return resolve(event);
+    return resolve(event);
 };

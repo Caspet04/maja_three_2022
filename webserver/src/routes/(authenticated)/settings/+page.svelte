@@ -1,19 +1,12 @@
 <script lang="ts">
-  import type { ActionData } from "./$types";
+    import type { ActionData } from "./$types";
 
-
-
-	export let form: ActionData;
+    export let form: ActionData;
 </script>
 
-<form method="POST" action="?/logout">
-	<button>LOGOUT</button>
-</form>
-
-
 <form method="POST" action="?/deleteaccount">
-	<button>DELETE ACCOUNT</button>
-	{#if form?.delete}
-		{form?.delete}
-	{/if}
+    <!-- {#if form?.error}
+        {form?.error}
+    {/if} -->
+    <button>DELETE ACCOUNT</button>
 </form>
