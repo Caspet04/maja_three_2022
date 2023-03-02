@@ -38,6 +38,8 @@
 		"@fontsource/fira-mono": "^4.5.9",
 		"@prisma/client": "^4.4.0",
 		"prism-themes": "^1.9.0",
-		"remark": "^14.0.2"
+		"remark": "^14.0.2",
+		"ts-async-results": "^0.7.1",
+		"ts-results": "^3.3.0"
 	}
 }
