@@ -1,12 +1,15 @@
-import { DiscFactory, Chad } from "./implementations";
+import { Operator, EngineFactory, IronPlate, SteelPlate } from "./implementations";
 // run program using following command:
 // npm install
 // npm run dev
 
-const factory = new DiscFactory();
+const factory = new EngineFactory();
 
-const student: Chad = new Chad("Chad Chaddington");
+const student: Operator = new Operator("Chad Chaddington");
 
+factory.add_part(
+    ...[new IronPlate(), new IronPlate(), new IronPlate(), new SteelPlate(), new IronPlate()]
+);
 const item = factory.produce();
 
 const success = student.interact(item);
