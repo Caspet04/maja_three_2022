@@ -1,7 +1,5 @@
 import type { Handle } from "@sveltejs/kit";
-import { database, init_ssr } from "$lib/database";
-
-init_ssr();
+import { database } from "$lib/database";
 
 // handle runs for every request to the server
 export const handle: Handle = async ({ event, resolve }) => {
