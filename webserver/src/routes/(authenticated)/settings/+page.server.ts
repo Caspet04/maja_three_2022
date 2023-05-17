@@ -1,35 +1,47 @@
 import { fail, redirect } from "@sveltejs/kit";
 import type { Actions } from "./$types";
-import { database } from "$lib/ssr";
+import { database } from "$lib/database";
+import { auth } from "$lib/auth";
+import { StatusCodes } from "http-status-codes";
 
 export const actions: Actions = {
-  logout: async ({ request, locals, cookies }) => {
-    const form = await request.formData();
+    logout: async ({ request, locals, cookies }) => {
+        const get_result = await auth.get_current_user(cookies).resolve();
+        if (get_result.err) {
+            get_result.val.action = "logout";
+            return fail(get_result.val.code, get_result.val);
+        }
 
-    // TODO: Implement register
-    // Check if ustername already exist etc.
-    cookies.delete("session");
-    throw redirect(302, "/login");
-  },
-  deleteaccount: async ({ request, locals, cookies }) => {
-    // TODO: Implement delete account
-    // Check if username already exist etc.
+        const user = get_result.val;
+        const logout_result = await auth
+            .logout({ session: user.session })
+            .resolve();
+        if (logout_result.err) {
+            logout_result.val.action = "logout";
+            return fail(logout_result.val.code, logout_result.val);
+        }
 
-    const user = await database.user.findUnique({
-      where: { session: locals.session },
-    });
+        auth.reset_session_cookie(cookies);
 
-    if (user) {
-      const result = await database.user.delete({
-        where: { id: user?.id },
-      });
+        throw redirect(StatusCodes.MOVED_TEMPORARILY, "/login");
+    },
 
-      console.log(result);
+    deleteaccount: async ({ request, locals, cookies }) => {
+        const get_result = await auth.get_current_user(cookies).resolve();
+        if (get_result.err) {
+            get_result.val.action = "deleteaccount";
+            return fail(get_result.val.code, get_result.val);
+        }
 
-      cookies.delete("userid");
-      throw redirect(302, "/login");
-    } else {
-      return fail(404, { delete: "deletion error" });
-    }
-  },
+        const user = get_result.val;
+        const delete_result = await auth.delete({ id: user.id }).resolve();
+        if (delete_result.err) {
+            delete_result.val.action = "deleteaccount";
+            return fail(delete_result.val.code, delete_result.val);
+        }
+
+        auth.reset_session_cookie(cookies);
+
+        throw redirect(StatusCodes.MOVED_TEMPORARILY, "/login");
+    },
 };

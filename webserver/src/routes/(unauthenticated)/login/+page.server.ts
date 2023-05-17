@@ -1,27 +1,24 @@
 import { fail, redirect } from "@sveltejs/kit";
 import type { Actions } from "./$types";
-import { auth } from "$lib/auth";
+import { auth, form_parser } from "$lib/auth";
+import { StatusCodes } from "http-status-codes";
 
 export const actions: Actions = {
-  login: async ({ request, cookies }) => {
-    const form = await request.formData();
+    login: async ({ request, cookies }) => {
+        const form = await request.formData();
 
-    const {success,error} = await auth.login(form);
-    
-    if (error) {
-      return fail(error.code, error.data);
-    }
+        const parse_result = form_parser.parse_for_login(form);
+        if (parse_result.err) {
+            return fail(parse_result.val.code, parse_result.val);
+        }
 
-    else {
-      cookies.set("session", success.session, {
-        path: "/",
-        httpOnly: true, // optional for now
-        sameSite: "strict", // optional for now
-        secure: process.env.NODE_ENV === "production", // optional for now
-        maxAge: 1200, //
-      });
-      throw redirect(302, "/");
-    }
+        const login_result = await auth.login(parse_result.val).resolve();
+        if (login_result.err) {
+            return fail(login_result.val.code, login_result.val);
+        }
 
-  },
+        auth.set_session_cookie(login_result.val, cookies);
+
+        throw redirect(StatusCodes.MOVED_TEMPORARILY, "/");
+    },
 };

@@ -1,29 +1,24 @@
 import type { Handle } from "@sveltejs/kit";
-import { database, init_ssr } from "$lib/ssr";
-
-init_ssr();
+import { database } from "$lib/database";
+import { auth } from "$lib/auth";
 
 // handle runs for every request to the server
 export const handle: Handle = async ({ event, resolve }) => {
-  const session = event.cookies.get("session");
-
-  if (session) {
-    let result = await database.user.findUnique({ where: { session } });
-    if (result?.session) {
-      event.locals.session = result.session;
+    const get_result = await auth.get_current_user(event.cookies).resolve();
+    if (get_result.ok) {
+        event.locals.session = get_result.val.session;
     }
-  }
 
-  if (event.request.method === "OPTIONS") {
-    return new Response(null, {
-      headers: {
-        "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE",
-        "Access-Control-Allow-Origin": "*",
-      },
-    });
-  }
+    // if (event.request.method === "OPTIONS") {
+    //     return new Response(null, {
+    //         headers: {
+    //             "Access-Control-Allow-Methods": "POST, GET, OPTIONS, DELETE",
+    //             "Access-Control-Allow-Origin": "*",
+    //         },
+    //     });
+    // }
 
-  /* 
+    /* 
   
     The following line is a yolo from a security perspective.
   
@@ -33,7 +28,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   
   */
 
-  const response = await resolve(event);
-  response.headers.append("Access-Control-Allow-Origin", `*`);
-  return response;
+    const response = await resolve(event);
+    // response.headers.append("Access-Control-Allow-Origin", `*`);
+    return response;
 };

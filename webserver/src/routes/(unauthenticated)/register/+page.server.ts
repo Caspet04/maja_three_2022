@@ -1,48 +1,25 @@
-import { database } from "$lib/ssr";
-import { redirect } from "@sveltejs/kit";
+import { database } from "$lib/database";
+import { fail, redirect } from "@sveltejs/kit";
 import type { Actions } from "./$types";
 import * as crypto from "crypto";
+import { auth, form_parser } from "$lib/auth";
 
 export const actions: Actions = {
-  register: async ({ request, locals, cookies }) => {
-    const form = await request.formData();
+    register: async ({ request, locals, cookies }) => {
+        const form = await request.formData();
 
-    const username = form.get("username")?.toString();
-    const password = form.get("password")?.toString();
+        const parse_result = form_parser.parse_for_register(form);
+        if (parse_result.err) {
+            return fail(parse_result.val.code, parse_result.val);
+        }
 
-    if (username && password) {
-      let users = await database.user.findUnique({ where: { username } });
+        const register_result = await auth.register(parse_result.val).resolve();
+        if (register_result.err) {
+            return fail(register_result.val.code, register_result.val);
+        }
 
-      if (!users) {
-        const session = crypto.randomUUID();
+        auth.set_session_cookie(register_result.val, cookies);
 
-                // Creating a unique salt for a particular user
-        const salt = crypto.randomBytes(16).toString('hex'); 
-        // Should be saved in the database along with the hash
-
-        // Hash the salt and password with 1000 iterations, 64 length and sha512 digest 
-        const hash = crypto.pbkdf2Sync(password, salt, 1000, 64, 'sha512').toString('hex');
-
-
-        const user = await database.user.create({
-          data: { username, hash, salt, session },
-        });
-
-        cookies.set("session", user.session, {
-          path: "/",
-          httpOnly: true, // optional for now
-          sameSite: "strict", // optional for now
-          secure: process.env.NODE_ENV === "production", // optional for now
-          maxAge: 120, //
-        });
         throw redirect(302, "/");
-      }
-    }
-    // TODO: Implement register
-    // Check if ustername already exist etc.
-
-    return {
-      error: "error my guy",
-    };
-  },
+    },
 };

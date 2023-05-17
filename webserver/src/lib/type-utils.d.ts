@@ -1,0 +1,1 @@
+export type Tag<TagName extends string> = { __tag: TagName };
