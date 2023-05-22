@@ -1,7 +1,9 @@
 import { PrismaClient } from "@prisma/client";
 import { StatusCodes } from "http-status-codes";
 import { AsyncResultWrapper, type AsyncResult } from "ts-async-results";
-import { Err, Ok, type Result } from "ts-results";
+import type { Result } from "ts-results";
+import pkg from "ts-results";
+const { Err, Ok } = pkg;
 import type { HTTPError } from "./http-result";
 export const database = new PrismaClient();
 export function wrap_database_response<T>(
