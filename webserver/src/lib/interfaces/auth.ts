@@ -1,8 +1,11 @@
-import type { Tag } from "$lib/type-utils";
-import type { HTTPError } from "$lib/http-result";
+import type { Tag } from "../type-utils";
+import type { HTTPError } from "../http-result";
 import type { Result } from "ts-results";
 import type { AsyncResult } from "ts-async-results";
 import type { Cookies } from "@sveltejs/kit";
+
+// Switch out ts-results with an ESM compatible library, likely self made
+// Can't be bothered with it, using the import pkg, const method instead
 
 export type Username = string & Tag<"username">;
 export type Password = string & Tag<"password">;
@@ -38,6 +41,26 @@ export type UserData = {
 };
 
 export interface AccountManager {
+    /**
+     * Gets a user by their session, returns an HTTPError if an error occurred or the user
+     * is not logged in.
+     *
+     * Example:
+     * ```
+     * const get_result = await manager.get_user_by_session(session).resolve();
+     * if (get_result.err) {
+     *     // Handle the error in `get_result.val`
+     * }
+     *
+     * const user = result.val;
+     * ```
+     *
+     * @param {UID} session The `session` argument is the session of the user.
+     * @returns {AsyncResult<UserData, HTTPError>} Returns an async result that either resolves to
+     * `UserData` or an `HTTPError`.
+     */
+    get_user_by_session(session: UID): AsyncResult<UserData, HTTPError>;
+
     /**
      * Gets the current user from the cookies, returns an HTTPError if an error occurred or the user
      * is not logged in.

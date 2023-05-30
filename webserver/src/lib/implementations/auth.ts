@@ -12,11 +12,13 @@ import type {
     UserData,
     UserID,
     Username,
-} from "$lib/interfaces/auth";
-import { database, wrap_database_response } from "$lib/database";
+} from "../interfaces/auth";
+import { database, wrap_database_response } from "../database";
 import * as crypto from "crypto";
-import { Err, Ok, type Result } from "ts-results";
-import type { HTTPError } from "$lib/http-result";
+import type { Result } from "ts-results";
+import pkg from "ts-results";
+const { Err, Ok } = pkg;
+import type { HTTPError } from "../http-result";
 import { AsyncResultWrapper, type AsyncResult } from "ts-async-results";
 import type { Cookies } from "@sveltejs/kit";
 import type { User } from "@prisma/client";
@@ -30,6 +32,32 @@ export class SQLiteAuth implements AccountManager {
         return crypto
             .pbkdf2Sync(password, salt, 1000, 64, "sha512")
             .toString("hex") as Hash;
+    }
+
+    get_user_by_session(session: UID): AsyncResult<UserData, HTTPError> {
+        return new AsyncResultWrapper<UserData, HTTPError>(
+            async (): Promise<Result<UserData, HTTPError>> => {
+                const database_result = await database.user.findUnique({
+                    where: { session },
+                });
+
+                if (database_result == undefined) {
+                    return Err({
+                        code: StatusCodes.BAD_REQUEST,
+                        name: "provided-session-nonexistant",
+                        message: "The proved does not exist",
+                    });
+                }
+
+                return Ok({
+                    username: database_result.username as Username,
+                    session: database_result.session as UID,
+                    id: database_result.id as UserID,
+                    salt: database_result.salt as Salt,
+                    hash: database_result.hash as Hash,
+                });
+            }
+        );
     }
 
     get_current_user(cookies: Cookies): AsyncResult<UserData, HTTPError> {
